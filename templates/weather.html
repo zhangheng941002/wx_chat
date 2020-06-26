@@ -1,0 +1,15 @@
+{% extends 'index.html' %}
+
+{% block title %}
+    {{ title }}
+{% endblock title %}
+
+
+{% block center %}
+    {% for each in content %}
+        {{ each }}
+        </br>
+        </br>
+    {% endfor %}
+{#    {{ content }}#}
+{% endblock center %}

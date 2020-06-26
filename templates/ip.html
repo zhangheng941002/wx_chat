@@ -1,0 +1,29 @@
+{% extends 'index.html' %}
+
+{% block title %}
+    {{ title }}
+{% endblock title %}
+
+
+{% block center %}
+    {% if title == "IP的信息" %}
+        {% if content.status == 0 %}
+            请输入查询IP
+        {% else %}
+            查询ip:&nbsp;&nbsp;&nbsp;{{ content.ip }}
+                </br>
+                </br>
+            ip_attr: &nbsp;&nbsp;&nbsp;{{ content.ip_attr }}
+                </br>
+                </br>
+            参考数据1：&nbsp;&nbsp;&nbsp;{{ content.data1 }}
+                </br>
+                </br>
+            参考数据2：&nbsp;&nbsp;&nbsp;{{ content.data2 }}
+                </br>
+                </br>
+        {% endif %}
+    {% else %}
+        IP:{{ content.ip }}
+    {% endif %}
+{% endblock center %}
