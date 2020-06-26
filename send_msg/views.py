@@ -1,15 +1,15 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.conf import settings
-from django.db.transaction import atomic
-import itchat, datetime
+import itchat
 from django.http import StreamingHttpResponse
 
-from yk_wx.setting_itchat import path_file, itchat_in
-from .models import *
+from yk_wx.setting_itchat import path_file
 from .serializers import *
-from helper.wx_login import *
-from helper.page_kit import get_page_limit
+
+from yk_wx.city_code import city
+from .models import CITY
+from django.http import JsonResponse
 from helper.log_help import *
 
 now_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
@@ -27,7 +27,7 @@ def check_IF_login(request):
 
 
 # 退出微信登录
-@api_view(["POST"])
+@api_view(["GET"])
 def logout(request):
     res = itchat.logout()
     print('-----------', res)
@@ -330,3 +330,11 @@ def reboot(request):
     @itchat.msg_register(itchat.content.TEXT)
     def text_reply(msg):
         return "【自动回复】" + "\n" + get_response(msg["Text"])["text"] + "\n" + "----------------" + "\n" + "From: ZH的机器人"
+
+
+def insert_city(request):
+    _list = []
+    for each in city:
+        _list.append(CITY(**each))
+    CITY.objects.bulk_create(_list)
+    return JsonResponse({"status": 1})

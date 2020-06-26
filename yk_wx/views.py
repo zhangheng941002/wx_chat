@@ -21,8 +21,6 @@ def get_all_url(request):
         "给好友发消息：": HEADER + "/send_msg/send_to_friend",
         "获取所有URL：": HEADER + "/send_msg/get_all_url",
         "查询天气：": HEADER + "/love/get_weather",
-        "查询IP信息：": HEADER + "/love/ip",
-        "查询出网IP：": HEADER + "/love/ownip",
 
 
     }

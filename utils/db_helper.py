@@ -1,9 +1,9 @@
 import pymysql
 
-import settings
-import log_kit
+from django.conf import settings
+from .log_kit import getLogger
 
-logger = log_kit.getLogger('dbhelper')
+logger = getLogger('dbhelper')
 
 
 class DBHelper(object):

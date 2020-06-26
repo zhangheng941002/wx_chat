@@ -127,8 +127,7 @@ REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
 
-LOVE = "love"
-LOVE_WHERE = "上海"
+
 
 LOVE_MSG = ['我什么时候能变成风，然后就可以一直吻你。',
             '遇见喜欢，大概就像一艘从来不靠岸的船终于找到港湾。',
@@ -192,6 +191,12 @@ LOVE_MSG = ['我什么时候能变成风，然后就可以一直吻你。',
             '如果可以，我想陪你一起疯，就像陪你蹲下做一只蘑菇一样。',
             '和你说话时，你可要好好看看，我脑海中的弹幕，因为，里面全是爱你的小句子。']
 
+AUTO_CHAT = True
+
+LOVE = "自己"
+LOVE_WHERE = "昌平"
+WEATHER_UEL = "http://t.weather.sojson.com/api/weather/city/{city_code}"
+WEATHER_DAYS = 3
 try:
     from .pro_conf import *
 except Exception as e:

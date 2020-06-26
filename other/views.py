@@ -25,32 +25,67 @@ def send_to_smy(request):
     data = request.GET
     name = data.get("name", settings.LOVE)
     city = data.get("city", settings.LOVE_WHERE)
+    day = data.get("city", settings.WEATHER_DAYS)
     users = itchat.search_friends(name=name)
+    print('===============================')
     print(users)
+    print('===============================')
+
     data_fin = {}
     if users:
         user_id = users[0]['UserName']
         content = query_weather(city)
-        date = content.get("date")
-        weather = content.get("weather")
-        temperature = content.get("temperature")
-        wind = content.get("wind")
+        cityInfo = content.get("cityInfo")
+        data = content.get("data")
+        shidu = data.get("shidu")
+        pm25 = data.get("pm25")
+        pm10 = data.get("pm10")
+        quality = data.get("quality")
+        wendu = data.get("wendu")
+        ganmao = data.get("ganmao")
+        forecast = data.get("forecast")
+
         llist = []
-        for d, w, t, wind, num in zip(date, weather, temperature, wind, [1, 2, 3, 4, 5]):
-            to = ''
-            if num == 1:
-                to = "今天"
-            if num == 2:
-                to = "明天"
-            if num == 3:
-                to = "后天"
-            if num == 4:
-                to = "大后天"
-            if num == 5:
-                to = "大大后天"
-            llist.append("{}：{}，天气：{}，温度：{}，风度：{}".format(to, d, w, t, wind))
-        # content = json.dumps(content, ensure_ascii=False)
-        msgs = "最近五天{}天气如下：".format(city) + "\n\n" + "\n\n".join(llist)
+        map_key = {
+            "ymd": "",  # 日期
+            "week": "",  # 星期
+            "high": "最高温度：",
+            "low": "最低温度：",
+            # "sunrise": "日出：",
+            # "sunset": "日落：",
+            "aqi": "空气指数：",
+            "fx": "风向：",
+            "fl": "风力：",
+            "type": "天气：",
+            "notice": "温馨提示："
+        }
+        for each in forecast:
+            """
+                "date": "26",
+                "high": "高温 28℃",
+                "low": "低温 20℃",
+                "ymd": "2020-06-26",
+                "week": "星期五",
+                "sunrise": "04:47",
+                "sunset": "19:49",
+                "aqi": 49,
+                "fx": "东南风",
+                "fl": "2级",
+                "type": "多云",
+                "notice": "阴晴之间，谨防紫外线侵扰"
+            """
+            _data = {}
+            _msg = ""
+            for k, v in map_key.items():
+                _msg += str(v)
+                if k in ["high", 'low']:
+                    _msg += str(each[k][3:])
+                else:
+                    _msg += str(each[k])
+                _msg += "\n"
+            llist.append(_msg)
+
+        msgs = "{}最近{}天天气如下：".format(cityInfo.get("parent")+cityInfo.get("city"), day) + "\n\n" + "\n\n".join(llist[:day])
         res = itchat.send(msgs, toUserName=user_id)
         res = res.get("BaseResponse").get("Ret")
         if res == 0:
