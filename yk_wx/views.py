@@ -19,9 +19,10 @@ def get_all_url(request):
         "获取好友：": HEADER + "/send_msg/get_friend",
         # "给群组发消息：": HEADER + "/send_msg/send_to_group",
         "给好友发消息：": HEADER + "/send_msg/send_to_friend",
-        "获取所有URL：": HEADER + "/send_msg/get_all_url",
-        "查询天气：": HEADER + "/love/get_weather",
-
+        "查询天气：": HEADER + "/other/gd_query_weather",
+        "IP定位：": HEADER + "/other/query_ip_area",
+        "手机号归属地查询：": HEADER + "/other/query_phone",
+        "获取所有URL：": HEADER + "/get_all_url",
 
     }
     return Response(data)

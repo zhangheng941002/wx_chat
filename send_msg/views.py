@@ -20,10 +20,10 @@ def check_IF_login(request):
     print(request.get_full_path())
     ourself_info = itchat.get_friends()
     if ourself_info:
-        return Response({"status": 1, "msg": "微信已在线", "url": "https://www.baidu.com"})
+        return Response({"status": 1, "msg": "微信已在线", "url": "http://www.zzhgod.com/"})
     else:
 
-        return Response({"status": 1, "msg": "微信已不在线，请重新登录", "url": "https://www.baidu.com"})
+        return Response({"status": 1, "msg": "微信已不在线，请重新登录", "url": "http://www.zzhgod.com/"})
 
 
 # 退出微信登录
@@ -262,25 +262,35 @@ def send_to_friend(request):
     通过 user_id 给好友发消息
     :param request: user_id，content
     demo: {
-            "user_id":"",
+            "username":"备注名",
             "content":"测试"
             }
     """
 
     full_path = request.get_full_path()
     data = request.data
-    user_id = data.get("user_id")
+    print('------------- send msg to your friend ----------', data)
+    username = data.get("username")
     content = data.get("content")
-    res = itchat.send(content, toUserName=user_id)
-    print(res)
-    res = res.get("BaseResponse").get("Ret")
-    if res == 0:
-        msg = "发送成功"
-    elif res == -1:
-        msg = "你查询的群组不存在！发送失败"
+    users = itchat.search_friends(name=username)
+    status = 1
+    if users:
+        user_id = users[0]['UserName']
+        res = itchat.send(content, toUserName=user_id)
+        print(res)
+        res = res.get("BaseResponse").get("Ret")
+        if res == 0:
+            msg = "发送成功"
+        elif res == -1:
+            msg = "你查询的群组不存在！发送失败"
+            status = 0
+        else:
+            msg = "发送失败"
+            status = 0
     else:
-        msg = "发送失败"
-    data_fin = {"status": 1, "msg": msg}
+        msg = "没有查找到你的好友~"
+        status = 0
+    data_fin = {"status": status, "msg": msg}
     logg(full_path, data, data_fin)
     return Response(data_fin)
 

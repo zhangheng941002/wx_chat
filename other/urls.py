@@ -8,6 +8,7 @@ urlpatterns = [
     url(r'send_to_qh$', send_to_qh),
     url(r'gd_query_weather$', gd_query_weather),
     url(r'query_ip_area$', query_ip_area),
+    url(r'query_phone$', query_phone),
 
 
 ]

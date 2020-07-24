@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 import requests
 from utils.query_weather_utils import query_weather
+from utils.util import OPTPhone
 from django.conf import settings
 
 GD_URL = settings.GD_URL
@@ -52,7 +53,26 @@ def gd_query_weather(request):
     return Response(_resp)
 
 
-if __name__ == '__main__':
-    print(query_ip_area("36.113.32.169"))
-    # print(query_ip_area("192.168.200.240"))
-    print(query_weather(1))
+@api_view(["GET"])
+def query_phone(request):
+    """
+    手机号归属地查询
+    支持号段: 13*,15*,18*,14[5,7],17[0,6,7,8]
+    :return:
+            {
+                "phone": "15701350657",
+                "province": "北京",
+                "city": "北京",
+                "zip_code": "100000",
+                "area_code": "010",
+                "phone_type": "移动"
+            }
+    """
+    data = request.query_params
+    phone = data.get("phone", None)
+    if phone:
+        zh = OPTPhone()
+        resp = zh.find_phone(phone)
+    else:
+        resp = {}
+    return Response(resp)

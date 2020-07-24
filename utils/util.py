@@ -25,18 +25,17 @@ class OPTPhone(object):
 
     def find_phone(self, phone_num):
         """
-        需要安装 phone 包， pip install phone
         手机号归属地查询
         支持号段: 13*,15*,18*,14[5,7],17[0,6,7,8]
         :param phone_num:phone number
         :return:
                 {
-                'phone': '15703154578', # 手机号
-                'province': '河北',   # 归属地省份
-                'city': '唐山',   # 归属地城市
-                'zip_code': '063000',  # 邮政编码
-                'area_code': '0315',  # 长途区号
-                'phone_type': '移动'  # 所属运营商
+                    "phone": "15701350657",
+                    "province": "北京",
+                    "city": "北京",
+                    "zip_code": "100000",
+                    "area_code": "010",
+                    "phone_type": "移动"
                 }
         """
         return self.PHONE.find(phone_num)
@@ -114,7 +113,7 @@ if __name__ == '__main__':
     print(diff.jiaoji(a, b))
 
     zh = OPTPhone()
-    S = zh.find_phone(15703154578)
+    S = zh.find_phone("18911430184")
     print(S)
 
     file = OPTFile()

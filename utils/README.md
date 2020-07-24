@@ -15,9 +15,7 @@
 
 5、query_weather_utils.py：天气查询
 
-6、translate.py：有道翻译接口（英译汉、汉译英）
-
-7、util.py：一些其他的有趣工具类（list操作、文件操作、电话号码归属地查询）
+6、util.py：一些其他的有趣工具类（list操作、文件操作、电话号码归属地查询）
 
 
 
