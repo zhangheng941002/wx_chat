@@ -4,9 +4,10 @@ from .views_render import *
 
 
 urlpatterns = [
-    url(r'send_weather$', send_to_smy),
-    url(r'send_love_msg$', send_to_smy_qh),
-    url(r'get_weather$', get_weather),
+    url(r'send_weather$', send_to_user_weather),
+    url(r'send_to_qh$', send_to_qh),
+    url(r'gd_query_weather$', gd_query_weather),
+    url(r'query_ip_area$', query_ip_area),
 
 
 ]

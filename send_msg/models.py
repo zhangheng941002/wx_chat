@@ -12,12 +12,11 @@ class WXGROUP(models.Model):
 
 
 class CITY(models.Model):
-    pid = models.IntegerField(max_length=12)
-    city_code = models.CharField(max_length=1024)
+    adcode = models.CharField(max_length=1024)
+    citycode = models.CharField(max_length=1024)
     city_name = models.CharField(max_length=1024)
-    post_code = models.CharField(max_length=1024)
-    area_code = models.CharField(max_length=1024)
-    ctime = models.DateTimeField()
+    create_date = models.DateTimeField(auto_now_add=True)
+    status = models.IntegerField(max_length=12,default=1)
 
     class Meta:
-        db_table = 'city'
+        db_table = 'gd_city_map'

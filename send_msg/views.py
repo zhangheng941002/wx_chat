@@ -7,10 +7,10 @@ from django.http import StreamingHttpResponse
 from yk_wx.setting_itchat import path_file
 from .serializers import *
 
-from yk_wx.city_code import city
+from utils.gd_weather_data.city_code import city
 from .models import CITY
 from django.http import JsonResponse
-from helper.log_help import *
+from utils.log_help import *
 
 now_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
 

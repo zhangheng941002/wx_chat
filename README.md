@@ -84,3 +84,11 @@ docker run -idt -v /data/wx_chat:/code -p 127.0.0.1:8000:8000  --name=wx wx:v1
 #### 2、其他
 
 ##### （1）获取指定城市（区）天气
+##### （2）获取IP地址
+备注：
+        默认查询访问主机IP，只支持国内IP，如果在局域网 IP网段内，则返回“局域网”；非法IP以及国外IP则返回空
+        
+### 四、搭建FTP服务器
+```
+python manage.py run_ftp_server
+```

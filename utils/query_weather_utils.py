@@ -2,25 +2,26 @@ import requests
 from send_msg.models import CITY
 from django.conf import settings
 
+GD_URL = settings.GD_URL
+GD_KEY = settings.GD_KEY
 
-def city_code(city):
-    city = CITY.objects.filter(city_name__contains=city)
-    if city.exists():
-        return True, city.first().city_code
+
+def query_weather(city, _type=0):
+    if _type:
+        extensions = "base"
     else:
-        return False, 0
+        extensions = "all"
 
+    _city_info = CITY.objects.filter(city_name__contains=city)
+    if not _city_info.exists():
+        return False, None
+    code = _city_info.first().adcode
+    url = f"{GD_URL}/weather/weatherInfo?key={GD_KEY}&city={code}&extensions={extensions}"
+    resp = requests.get(url)
+    _resp = resp.json()
+    _resp["status"] = int(_resp.get("status"))
 
-def city_weather(code):
-    resp = requests.get(url=settings.WEATHER_UEL.format(city_code=code))
-    return resp.json()
-
-
-def query_weather(city_name):
-    status, code = city_code(city_name)
-    if not status:
-        return False, "城市不存在"
-    return city_weather(code)
+    return True, _resp
 
 
 if __name__ == '__main__':

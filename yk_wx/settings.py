@@ -41,6 +41,7 @@ INSTALLED_APPS = [
 
     "send_msg",
     "other",
+    "ftp_web",
 ]
 
 MIDDLEWARE = [
@@ -193,10 +194,34 @@ LOVE_MSG = ['我什么时候能变成风，然后就可以一直吻你。',
 
 AUTO_CHAT = True
 
-LOVE = "自己"
+LOVE = "备用"
 LOVE_WHERE = "昌平"
 WEATHER_UEL = "http://t.weather.sojson.com/api/weather/city/{city_code}"
 WEATHER_DAYS = 3
+
+GD_URL = "https://restapi.amap.com/v3"
+GD_KEY = "90e03aba500340813a84061f3e28c525"
+
+FTP_CONFIG = {
+    "IP": "0.0.0.0",  # 服务器IP
+    "USERNAME": "zh",
+    "PASSWORD": "123456",
+    "FILE_PATH": "/env",  # 映射的路径
+    "PORT": 21,
+    "MAX_CONS": 1024,
+    "MAX_CONS_PER_IP": 1024,
+}
+
+WEEK_MAP = {
+    "1": "星期一",
+    "2": "星期二",
+    "3": "星期三",
+    "4": "星期四",
+    "5": "星期五",
+    "6": "星期六",
+    "7": "星期日",
+}
+
 try:
     from .pro_conf import *
 except Exception as e:

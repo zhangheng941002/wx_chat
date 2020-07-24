@@ -22,7 +22,7 @@ from .views import get_all_url
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("send_msg/", include("send_msg.urls")),
-    path("love/", include("other.urls")),
+    path("other/", include("other.urls")),
     url(r'get_all_url', get_all_url),
 
 ]
