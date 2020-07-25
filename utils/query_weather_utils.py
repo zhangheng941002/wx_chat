@@ -6,13 +6,20 @@ GD_URL = settings.GD_URL
 GD_KEY = settings.GD_KEY
 
 
-def query_weather(city, _type=0):
+def query_weather(city, province=None, _type=0):
     if _type:
         extensions = "base"
     else:
         extensions = "all"
-
-    _city_info = CITY.objects.filter(city_name__contains=city)
+    if province:
+        _citys = CITY.objects.filter(city_name__contains=province)
+        if not _citys.exists():
+            return False, None
+        city_code = _citys.first().citycode
+        _city = CITY.objects.filter(citycode=city_code)
+    else:
+        _city = CITY.objects.all()
+    _city_info = _city.filter(city_name__contains=city)
     if not _city_info.exists():
         return False, None
     code = _city_info.first().adcode

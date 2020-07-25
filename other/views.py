@@ -7,6 +7,7 @@ import random
 
 from utils.query_weather_utils import query_weather
 from utils.log_help import *
+from utils.gd_weather_data.notice_map import *
 
 
 @api_view(["GET"])
@@ -15,6 +16,7 @@ def send_to_user_weather(request):
     给好友发送天气
     :param request:
                 city:城市
+                province: 省份或直辖市名称
                 name:好友的备注名称
                 days:查看几天的天气，默认3天
     :return:
@@ -24,6 +26,7 @@ def send_to_user_weather(request):
     data = request.GET
     name = data.get("name", settings.LOVE)
     city = data.get("city", settings.LOVE_WHERE)
+    province = data.get("province", settings.LOVE_WHERE)
     day = data.get("days", settings.WEATHER_DAYS)
     users = itchat.search_friends(name=name)
     # users = 1
@@ -34,7 +37,7 @@ def send_to_user_weather(request):
     data_fin = {}
     if users:
         user_id = users[0]['UserName']
-        status, content = query_weather(city)
+        status, content = query_weather(city, province)
         if not status:
             return Response({"status": 0, "msg": "没有查到城市"})
 
@@ -76,6 +79,15 @@ def send_to_user_weather(request):
                 else:
                     _msg += str(each[k])
                 _msg += "\n"
+                if k =="dayweather":
+                    _msg += "温馨提醒："
+                    _notice = "I love you"
+                    for _k, _v in WEATHER_DATA.items():
+                        if str(each[k]) in _v:
+                            _notice = NOTICE_MAP[_k][random.randint(0, 2)]
+                            break
+                    _msg += _notice
+
             llist.append(_msg)
 
         msgs = "{}最近{}天天气如下：".format(city_info, day) + "\n\n" + "\n\n".join(llist[:day])

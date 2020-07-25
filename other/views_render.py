@@ -40,14 +40,16 @@ def query_ip_area(request):
 def gd_query_weather(request):
     """
     查询天气
-    城市名称
-    查询类型，默认查询天气预报，_type：1/0 -->实时/天气预报（4天）
+     city: 城市名称或者区名
+     province: 省份或直辖市名称
+     _type: 查询类型，默认查询天气预报，_type：1/0 -->实时/天气预报（4天）
 
     """
     data = request.GET
     _type = int(data.get("_type", 0))
     city = data.get("city", "北京市")
-    status, _resp = query_weather(city, _type)
+    province = data.get("province",   None)
+    status, _resp = query_weather(city, province, _type)
     if not status:
         return Response({"status": 0, "msg": "没有要查的城市"})
     return Response(_resp)

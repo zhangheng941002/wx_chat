@@ -196,6 +196,7 @@ AUTO_CHAT = True
 
 LOVE = "备用"
 LOVE_WHERE = "昌平"
+PROVINCE = "北京"
 WEATHER_UEL = "http://t.weather.sojson.com/api/weather/city/{city_code}"
 WEATHER_DAYS = 3
 
