@@ -26,7 +26,7 @@ def send_to_user_weather(request):
     data = request.GET
     name = data.get("name", settings.LOVE)
     city = data.get("city", settings.LOVE_WHERE)
-    province = data.get("province", settings.LOVE_WHERE)
+    province = data.get("province", None)
     day = data.get("days", settings.WEATHER_DAYS)
     users = itchat.search_friends(name=name)
     # users = 1
@@ -92,6 +92,7 @@ def send_to_user_weather(request):
 
         msgs = "{}最近{}天天气如下：".format(city_info, day) + "\n\n" + "\n\n".join(llist[:day])
         res = itchat.send(msgs, toUserName=user_id)
+        print("----------- send msg response:-------", res)
         res = res.get("BaseResponse").get("Ret")
         if res == 0:
             msg = "发送成功"
