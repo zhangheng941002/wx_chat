@@ -12,6 +12,7 @@ urlpatterns = [
     url(r'login', login),
     url(r'check', check_IF_login),
     url(r'qr_code_load', big_file_download),
-    url(r'insert_city', insert_city),
+    url(r'auto_add_chat', auto_add_chat),
+    url(r'auto_del_chat', auto_del_chat),
 
 ]

@@ -76,10 +76,10 @@ docker run -idt -v /data/wx_chat:/code -p 127.0.0.1:8000:8000  --name=wx wx:v1
 ##### （4）给指定好友发送消息
 
 ##### （5）给指定好友发送指定城市的天气，默认3天
+##### （6）增加自动回复定制化
+针对已添加备注的好友，设置自动回复，好友可自动关闭/开启自动回复
+##### （7）取消某好友的自动回复
 
-备注：
-
-​		默认开启自动回复，可关闭，修改`settings.py`文件中AUTO_CHAT=False即可关闭自动回复
 
 #### 2、其他
 
@@ -88,8 +88,31 @@ docker run -idt -v /data/wx_chat:/code -p 127.0.0.1:8000:8000  --name=wx wx:v1
 备注：
         默认查询访问主机IP，只支持国内IP，如果在局域网 IP网段内，则返回“局域网”；非法IP以及国外IP则返回空
 ##### （3）手机号归属地查询
-        
+
 ### 四、搭建FTP服务器
 ```
 python manage.py run_ftp_server
+```
+
+#### 五、以支持API
+```
+{
+    "wx_api": {
+        "登录：": "http://127.0.0.1:9090/send_msg/login",
+        "二维码下载：": "http://127.0.0.1:9090/send_msg/qr_code_load",
+        "退出登录：": "http://127.0.0.1:9090/send_msg/logout",
+        "验证是否登录：": "http://127.0.0.1:9090/send_msg/check",
+        "获取好友：": "http://127.0.0.1:9090/send_msg/get_friend",
+        "将有备注的好友加入自动回复：": "http://127.0.0.1:9090/send_msg/auto_add_chat",
+        "取消好友自动回复：": "http://127.0.0.1:9090/send_msg/auto_del_chat",
+        "给好友发消息：": "http://127.0.0.1:9090/send_msg/send_to_friend",
+        "给好友发送天气提醒：": "http://127.0.0.1:9090/other/send_weather"
+    },
+    "other_api": {
+        "查询天气：": "http://127.0.0.1:9090/other/gd_query_weather",
+        "IP定位：": "http://127.0.0.1:9090/other/query_ip_area",
+        "手机号归属地查询：": "http://127.0.0.1:9090/other/query_phone",
+        "获取所有URL：": "http://127.0.0.1:9090/get_all_url"
+    }
+}
 ```

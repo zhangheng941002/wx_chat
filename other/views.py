@@ -18,7 +18,9 @@ def send_to_user_weather(request):
                 city:城市
                 province: 省份或直辖市名称
                 name:好友的备注名称
-                days:查看几天的天气，默认3天
+                days:查看几天的天气，该接口可查询出四天的信息，默认3天，后三天的
+                opt_type: 查看类型：默认后三天天气，opt_type=1,
+                                                    opt_type=2:查看当天天气
     :return:
     """
 
@@ -27,6 +29,7 @@ def send_to_user_weather(request):
     name = data.get("name", settings.LOVE)
     city = data.get("city", settings.LOVE_WHERE)
     province = data.get("province", None)
+    opt_type = data.get("opt_type", 1)
     day = data.get("days", settings.WEATHER_DAYS)
     users = itchat.search_friends(name=name)
     # users = 1
@@ -54,7 +57,13 @@ def send_to_user_weather(request):
             "daypower": "风力：",
             "dayweather": "天气：",
         }
-        for each in casts:
+        if opt_type == 1:
+            q_range = casts[1:]
+        elif opt_type == 2:
+            q_range = casts[:1]
+        else:
+            q_range = casts[1:]
+        for each in q_range:
             """
                 "date": "2020-07-22", # 日期
                 "week": "3",  # 星期几
@@ -79,7 +88,7 @@ def send_to_user_weather(request):
                 else:
                     _msg += str(each[k])
                 _msg += "\n"
-                if k =="dayweather":
+                if k == "dayweather":
                     _msg += "温馨提醒："
                     _notice = "I love you"
                     for _k, _v in WEATHER_DATA.items():
@@ -102,7 +111,7 @@ def send_to_user_weather(request):
             msg = "发送失败"
 
         data_fin = {"status": 1, "msg": "{}，{}".format(msg, content)}
-    logg(full_path, data_fin)
+    # logg(full_path, data_fin)
     return Response(data_fin)
 
 
@@ -131,5 +140,5 @@ def send_to_qh(request):
         else:
             msg = "发送失败"
         data_fin = {"status": 1, "msg": "{}，{}".format(msg, settings.LOVE_MSG[random.randint(0, 60)])}
-    logg(full_path, data_fin)
+    # logg(full_path, data_fin)
     return Response(data_fin)

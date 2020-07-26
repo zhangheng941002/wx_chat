@@ -8,7 +8,7 @@ from yk_wx.setting_itchat import path_file
 from .serializers import *
 
 from utils.gd_weather_data.city_code import city
-from .models import CITY
+from .models import CITY, AutoChat, AutoChatNotice, MsgLog
 from django.http import JsonResponse
 from utils.log_help import *
 
@@ -17,7 +17,6 @@ now_time = datetime.datetime.utcnow() + datetime.timedelta(hours=8)
 
 @api_view(["GET"])
 def check_IF_login(request):
-    print(request.get_full_path())
     ourself_info = itchat.get_friends()
     if ourself_info:
         return Response({"status": 1, "msg": "微信已在线", "url": "http://www.zzhgod.com/"})
@@ -44,33 +43,49 @@ def logout(request):
 
 @api_view(["GET"])
 def login(request):
-    if settings.AUTO_CHAT:
-        def get_response(info):
-            from qqai import TextChat
+    """
+    微信扫码登陆
+    :param request:
+    :return:
+    """
+    def get_response(info, remark_name):
+        from qqai import TextChat
 
-            siri = TextChat("2125667918", "YBCQnC3q4PLQAGNN")
+        siri = TextChat(settings.TX_KEY, settings.TX_TOKEN)
+        answer = siri.ask(info)
+        print("回复：", answer)
+        MsgLog.objects.create(remark_name=remark_name, user_msg=info, reply_msg=answer)
+        return answer
 
-            # 单句对话
-            answer = siri.ask(info)
-            print('------ 自动回复 -------', answer)
-            return answer
+    @itchat.msg_register(itchat.content.TEXT)
+    def text_reply(msg):
+        try:
+            user = msg['User']
+            print('---- 发送人 NickName：{}，备注：{} -------- 发送消息：{}'.format(user['NickName'], user['RemarkName'],
+                                                                       msg['Text']))
+            _msg = msg['Text']
+            remark_name = user['RemarkName']
+            if "关闭回复" in _msg:
+                AutoChat.objects.filter(remark_name=remark_name, status=1).update(status=0)
+            if "开启回复" in _msg:
+                AutoChat.objects.filter(remark_name=remark_name, status=0).order_by("-id").update(status=1)
+        except Exception as e:
+            print(' !!!!!!!!!!!!! 发送错误-----', str(e))
+            remark_name = str(e)
 
-        @itchat.msg_register(itchat.content.TEXT)
-        def text_reply(msg):
-            try:
-                user = msg['User']
-                print('---- 发送人 NickName：{}，备注：{} -------- 发送消息：{}'.format(user['NickName'], user['RemarkName'],
-                                                                           msg['Text']))
-            except Exception as e:
-                print(' !!!!!!!!!!!!! 发送错误-----', str(e))
-            return "【自动回复→ZH的机器人】" + "\n" + get_response(msg["Text"])
-            # return "【自动回复】" + "\n" + "我是机器人，不会聊天，请找主人说事"
+        if AutoChat.objects.filter(remark_name=remark_name, status=1).exists():
+            _notice = AutoChatNotice.objects.filter(remark_name=remark_name, status=0)
+            if _notice.exists():
+                _notice.update(status=1)
+                notice_msg = "\n\n" + "回复：关闭回复，则关闭智能对话；开启回复：则启动智能对话"
+            else:
+                notice_msg = ""
+            return get_response(msg["Text"], remark_name) + notice_msg
+        # return "【自动回复】" + "\n" + "我是机器人，不会聊天，请找主人说事"
 
-        res = itchat.auto_login(hotReload=True)
-        itchat.run()
-    res = itchat.auto_login(hotReload=True, enableCmdQR=True)
+    res = itchat.auto_login(hotReload=True)
+    itchat.run()
     status = 1
-    print(res)
     return Response({"status": status})
 
 
@@ -86,9 +101,6 @@ def get_group(request):
     full_path = request.get_full_path()
     group_name = request.GET.get("group_name", "")
     groups = itchat.search_chatrooms(name=group_name)
-    print('------------------- groups ----------------------------')
-    print(groups)
-    print('------------------- groups ----------------------------')
     data = {}
 
     if groups:
@@ -98,7 +110,7 @@ def get_group(request):
         data['MemberCount'] = group.get("MemberCount")
         data['MemberList'] = group.get("MemberList")
 
-    logg(full_path, request.GET, {})
+    # logg(full_path, request.GET, {})
     return Response({"status": 1, "results": data})
 
 
@@ -119,7 +131,6 @@ def create_group(request):
     data = request.data
     group_name = data.get("group_name")
     operator = data.get("operator")
-    print(group_name)
     group_filter = WXGROUP.objects.filter(group_name=group_name)
     if group_filter:
         return Response({"status": 0, "msg": "你要创建的群组已存在"})
@@ -142,7 +153,7 @@ def create_group(request):
         msg = "创建失败，没有找到你所要创建的群组"
         status = 0
     data_fin = {"status": status, "msg": msg}
-    logg(full_path, data, data_fin)
+    # logg(full_path, data, data_fin)
     return Response(data_fin)
 
 
@@ -199,7 +210,7 @@ def send_to_group(request):
         msg = "没有找到群组，请核对群组名是否有效！"
         status = 0
     data_fin = {"status": status, "msg": msg, }
-    logg(full_path, data, data_fin)
+    # logg(full_path, data, data_fin)
     return Response(data_fin)
 
 
@@ -221,11 +232,11 @@ def get_friend(request):
         data = {}
         if users:
             user_id = users[0]['UserName']
-            user_orign_name = users[0]['NickName']
-            user_note = users[0]['RemarkName']
+            user_origin_name = users[0]['NickName']
+            remark_name = users[0]['RemarkName']
             data["user_id"] = user_id
-            data["user_orign_name"] = user_orign_name
-            data["user_note"] = user_note
+            data["user_origin_name"] = user_origin_name
+            data["remark_name"] = remark_name
             list_fin.append(data)
             msg = "查询成功"
         else:
@@ -234,24 +245,20 @@ def get_friend(request):
     else:
 
         # 获取通讯录信息，所有好友信息
-
         friend_list = itchat.get_friends()[1:]  # 第一个是自己的信息，去掉
         for each_friend in friend_list:
             data_ea = {}
             user_id = each_friend.UserName
-            user_orign_name = each_friend.NickName
-            user_note = each_friend.RemarkName
+            user_origin_name = each_friend.NickName
+            remark_name = each_friend.RemarkName
             data_ea["user_id"] = user_id
-            data_ea["user_orign_name"] = user_orign_name
-            data_ea["user_note"] = user_note
+            data_ea["user_origin_name"] = user_origin_name
+            data_ea["remark_name"] = remark_name
             list_fin.append(data_ea)
-            # print("发送信息的ID：", user_id)
-            # print("好友自己的微信名字：", user_orign_name)
-            # print("备注名字：", user_note)  # 搜索的
 
         msg = "查询成功"
     data_fin = {"status": 1, "msg": msg, "data": list_fin}
-    logg(full_path, request.GET, data_fin)
+    # logg(full_path, request.GET, data_fin)
     return Response(data_fin)
 
 
@@ -267,7 +274,6 @@ def send_to_friend(request):
             }
     """
 
-    full_path = request.get_full_path()
     data = request.data
     print('------------- send msg to your friend ----------', data)
     username = data.get("username")
@@ -291,7 +297,6 @@ def send_to_friend(request):
         msg = "没有查找到你的好友~"
         status = 0
     data_fin = {"status": status, "msg": msg}
-    logg(full_path, data, data_fin)
     return Response(data_fin)
 
 
@@ -318,28 +323,84 @@ def big_file_download(request):
     return response
 
 
-@api_view(["GET"])
-def reboot(request):
-    # do something...
-
-    import requests
-    import itchat
-
-    def get_response(_info):
-        print(_info)  # 从好友发过来的消息
-        api_url = 'http://www.tuling123.com/openapi/api'  # 图灵机器人接口地址
-        data = {
-            'key': 'f8a3234fc06743b4832087b0210dfc3e',  # 使用自己注册得到的key
-            'info': _info,  # 这是我们从好友接收到的消息 然后转发给图灵机器人
-            'userid': 'wechat-robot',
+# 默认将所有有备注的好友加入自动回复
+@api_view(["POST"])
+def auto_add_chat(request):
+    """
+    默认将所有有备注的好友加入自动回复
+    :param request: {
+                "names": ["自己1", "自己2"]  # 数组形式
         }
-        r = requests.post(api_url, data=data).json()  # 把data数据发
-        print(r.get('text'))  # 机器人回复给好友的消息
-        return r
+    demo:
+    """
+    data = request.data
+    names = data.get("names", None)
+    if names:
+        if not isinstance(names, list):
+            return Response({"status": 0, "msg": "names是list类型！"})
+    friend_list = itchat.get_friends()[1:]
+    all_list = []
+    notice_list = []
+    _data = []
+    if names:
+        for name in names:
+            users = itchat.search_friends(name=name)
+            data = {}
+            if users:
+                data_ea = {}
+                user_id = users[0]['UserName']
+                user_origin_name = users[0]['NickName']
+                remark_name = users[0]['RemarkName']
+                data["user_id"] = user_id
+                data["user_origin_name"] = user_origin_name
+                data["remark_name"] = remark_name
+                _data.append(data_ea)
+                all_list.append(AutoChat(remark_name=remark_name))
+                notice_list.append(AutoChatNotice(remark_name=remark_name))
+    else:
+        for each_friend in friend_list:
+            data_ea = {}
+            user_id = each_friend.UserName
+            user_origin_name = each_friend.NickName
+            remark_name = each_friend.RemarkName
+            data_ea["user_id"] = user_id
+            data_ea["user_origin_name"] = user_origin_name
+            data_ea["remark_name"] = remark_name
+            if remark_name:
+                if not AutoChat.objects.filter(remark_name=remark_name, status=1).exists():
+                    _data.append(data_ea)
+                    all_list.append(AutoChat(remark_name=remark_name))
+                    notice_list.append(AutoChatNotice(remark_name=remark_name))
 
-    @itchat.msg_register(itchat.content.TEXT)
-    def text_reply(msg):
-        return "【自动回复】" + "\n" + get_response(msg["Text"])["text"] + "\n" + "----------------" + "\n" + "From: ZH的机器人"
+    if all_list:
+        AutoChat.objects.bulk_create(all_list)
+        AutoChatNotice.objects.bulk_create(notice_list)
+
+    msg = "添加成功"
+    data_fin = {"status": 1, "msg": msg, "data": _data}
+    return Response(data_fin)
+
+
+# 取消好友自动回复
+@api_view(["POST"])
+def auto_del_chat(request):
+    """
+    取消好友自动回复
+    :param request:
+            ｛
+                "names": ["自己1", "自己2"]  # 数组形式
+            ｝
+    demo:
+    """
+
+    data = request.data
+    names = data.get("names")
+    print('---------------', data)
+    for name in names:
+        AutoChat.objects.filter(remark_name=name, status=1).update(status=0)
+    msg = "取消成功"
+    data_fin = {"status": 1, "msg": msg}
+    return Response(data_fin)
 
 
 def insert_city(request):

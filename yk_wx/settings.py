@@ -80,11 +80,10 @@ WSGI_APPLICATION = 'yk_wx.wsgi.application'
 
 DATABASES = {
 
- 'default': {
+    'default': {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
     }
-
 
 }
 
@@ -127,8 +126,6 @@ STATIC_URL = '/static/'
 REST_FRAMEWORK = {
     'DEFAULT_FILTER_BACKENDS': ('django_filters.rest_framework.DjangoFilterBackend',)
 }
-
-
 
 LOVE_MSG = ['我什么时候能变成风，然后就可以一直吻你。',
             '遇见喜欢，大概就像一艘从来不靠岸的船终于找到港湾。',
@@ -192,26 +189,12 @@ LOVE_MSG = ['我什么时候能变成风，然后就可以一直吻你。',
             '如果可以，我想陪你一起疯，就像陪你蹲下做一只蘑菇一样。',
             '和你说话时，你可要好好看看，我脑海中的弹幕，因为，里面全是爱你的小句子。']
 
-AUTO_CHAT = True
 
+# 好友发送天气信息默认值
 LOVE = "备用"
 LOVE_WHERE = "昌平"
 PROVINCE = "北京"
-WEATHER_UEL = "http://t.weather.sojson.com/api/weather/city/{city_code}"
 WEATHER_DAYS = 3
-
-GD_URL = "https://restapi.amap.com/v3"
-GD_KEY = "90e03aba500340813a84061f3e28c525"
-
-FTP_CONFIG = {
-    "IP": "0.0.0.0",  # 服务器IP
-    "USERNAME": "zh",
-    "PASSWORD": "123456",
-    "FILE_PATH": "/env",  # 映射的路径
-    "PORT": 21,
-    "MAX_CONS": 1024,
-    "MAX_CONS_PER_IP": 1024,
-}
 
 WEEK_MAP = {
     "1": "星期一",
@@ -221,6 +204,24 @@ WEEK_MAP = {
     "5": "星期五",
     "6": "星期六",
     "7": "星期日",
+}
+
+# 高德API信息，可自己注册申请
+GD_URL = "https://restapi.amap.com/v3"
+GD_KEY = "90e03aba500340813a84061f3e28c525"
+
+# 腾讯智能机器人，请自己申请
+TX_KEY = "2125667918"
+TX_TOKEN = "YBCQnC3q4PLQAGNN"
+
+FTP_CONFIG = {
+    "IP": "0.0.0.0",  # 服务器IP
+    "USERNAME": "zh",
+    "PASSWORD": "123456",
+    "FILE_PATH": "/env",  # 映射的路径
+    "PORT": 21,
+    "MAX_CONS": 1024,
+    "MAX_CONS_PER_IP": 1024,
 }
 
 try:

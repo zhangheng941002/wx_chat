@@ -20,3 +20,32 @@ class CITY(models.Model):
 
     class Meta:
         db_table = 'gd_city_map'
+
+
+class AutoChat(models.Model):
+    remark_name = models.CharField(max_length=1024)
+    create_date = models.DateTimeField(auto_now_add=True)
+    update_date = models.DateTimeField(auto_now_add=True)
+    status = models.IntegerField(max_length=12, default=1)
+
+    class Meta:
+        db_table = 'auto_chat'
+
+
+class AutoChatNotice(models.Model):
+    remark_name = models.CharField(max_length=1024)
+    create_date = models.DateTimeField(auto_now_add=True)
+    status = models.IntegerField(max_length=12, default=0)
+
+    class Meta:
+        db_table = 'auto_chat_notice'
+
+
+class MsgLog(models.Model):
+    remark_name = models.CharField(max_length=1024)
+    user_msg = models.CharField(max_length=1024)
+    reply_msg = models.CharField(max_length=1024)
+    create_date = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'msg_log'

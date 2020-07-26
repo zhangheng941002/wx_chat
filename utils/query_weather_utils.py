@@ -7,6 +7,14 @@ GD_KEY = settings.GD_KEY
 
 
 def query_weather(city, province=None, _type=0):
+    """
+    查询天气封装接口
+    :param city: 城市或区名
+    :param province: 省份或直辖市名称
+    :param _type: 查看类型：默认查询天气预报，0/1:查询天气预报/实时天气
+    :return:
+    """
+
     if _type:
         extensions = "base"
     else:
