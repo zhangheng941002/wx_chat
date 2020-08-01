@@ -6,8 +6,9 @@ import itchat
 import random
 
 from utils.query_weather_utils import query_weather
-from utils.log_help import *
 from utils.gd_weather_data.notice_map import *
+from send_msg.models import QhLove
+from .models import QhLoveLog
 
 
 @api_view(["GET"])
@@ -24,7 +25,6 @@ def send_to_user_weather(request):
     :return:
     """
 
-    full_path = request.get_full_path()
     data = request.GET
     name = data.get("name", settings.LOVE)
     city = data.get("city", settings.LOVE_WHERE)
@@ -32,7 +32,6 @@ def send_to_user_weather(request):
     opt_type = data.get("opt_type", 1)
     day = data.get("days", settings.WEATHER_DAYS)
     users = itchat.search_friends(name=name)
-    # users = 1
     print('===============================')
     print(users)
     print('===============================')
@@ -111,7 +110,6 @@ def send_to_user_weather(request):
             msg = "发送失败"
 
         data_fin = {"status": 1, "msg": "{}，{}".format(msg, content)}
-    # logg(full_path, data_fin)
     return Response(data_fin)
 
 
@@ -121,24 +119,29 @@ def send_to_qh(request):
 
     """
 
-    full_path = request.get_full_path()
     data = request.GET
     name = data.get("name", settings.LOVE)
     users = itchat.search_friends(name=name)
-    print(users)
+
     data_fin = {}
     if users:
         user_id = users[0]['UserName']
-
-        res = itchat.send("今日份情话：{}".format(settings.LOVE_MSG[random.randint(0, 60)]), toUserName=user_id)
+        qh = QhLove.objects.raw("select * from qh_to_love where status=1 order by rand() LIMIT 1")
+        qh_msg = "I love U"
+        for each in qh:
+            qh_msg = each.msg
+            each.counts = each.counts + 1
+            each.save()
+            break
+        res = itchat.send("今日份情话：{}".format(qh_msg), toUserName=user_id)
         print(res)
         res = res.get("BaseResponse").get("Ret")
         if res == 0:
             msg = "发送成功"
+            QhLoveLog.objects.create(msg=qh_msg, user_name=name)
         elif res == -1:
             msg = "你查询的群组不存在！发送失败"
         else:
             msg = "发送失败"
-        data_fin = {"status": 1, "msg": "{}，{}".format(msg, settings.LOVE_MSG[random.randint(0, 60)])}
-    # logg(full_path, data_fin)
+        data_fin = {"status": 1, "msg": "{}，{}".format(msg, qh)}
     return Response(data_fin)

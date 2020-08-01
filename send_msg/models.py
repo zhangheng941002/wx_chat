@@ -16,7 +16,7 @@ class CITY(models.Model):
     citycode = models.CharField(max_length=1024)
     city_name = models.CharField(max_length=1024)
     create_date = models.DateTimeField(auto_now_add=True)
-    status = models.IntegerField(max_length=12,default=1)
+    status = models.IntegerField(default=1)
 
     class Meta:
         db_table = 'gd_city_map'
@@ -26,7 +26,7 @@ class AutoChat(models.Model):
     remark_name = models.CharField(max_length=1024)
     create_date = models.DateTimeField(auto_now_add=True)
     update_date = models.DateTimeField(auto_now_add=True)
-    status = models.IntegerField(max_length=12, default=1)
+    status = models.IntegerField(default=1)
 
     class Meta:
         db_table = 'auto_chat'
@@ -35,7 +35,7 @@ class AutoChat(models.Model):
 class AutoChatNotice(models.Model):
     remark_name = models.CharField(max_length=1024)
     create_date = models.DateTimeField(auto_now_add=True)
-    status = models.IntegerField(max_length=12, default=0)
+    status = models.IntegerField(default=0)
 
     class Meta:
         db_table = 'auto_chat_notice'
@@ -49,3 +49,14 @@ class MsgLog(models.Model):
 
     class Meta:
         db_table = 'msg_log'
+
+
+class QhLove(models.Model):
+    msg = models.CharField(max_length=2048)
+    counts = models.IntegerField(default=0)
+    status = models.IntegerField(default=1)
+
+    class Meta:
+        db_table = 'qh_to_love'
+
+

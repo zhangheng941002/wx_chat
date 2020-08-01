@@ -28,11 +28,15 @@ def get_all_url(request):
 
             "给好友发送天气提醒：": HEADER + "/other/send_weather",
 
-            # "获取群组：": HEADER + "/send_msg/get_group",
+            "给指定好友发送情话：": HEADER + "/other/send_to_qh",
 
-            # "创建群组：": HEADER + "/send_msg/create_group",
+            "获取群组：": HEADER + "/send_msg/get_group",
 
-            # "给群组发消息：": HEADER + "/send_msg/send_to_group",
+            "创建群组：": HEADER + "/send_msg/create_group",
+
+            "添加好友进某一群组：": HEADER + "/send_msg/add_user_to_group",
+
+            "给群组发消息：": HEADER + "/send_msg/send_to_group",
         },
         "other_api": {
             "查询天气：": HEADER + "/other/gd_query_weather",

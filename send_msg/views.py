@@ -2,13 +2,13 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.conf import settings
 import itchat
+import traceback
 from django.http import StreamingHttpResponse
 
 from yk_wx.setting_itchat import path_file
 from .serializers import *
 
-from utils.gd_weather_data.city_code import city
-from .models import CITY, AutoChat, AutoChatNotice, MsgLog
+from .models import *
 from django.http import JsonResponse
 from utils.log_help import *
 
@@ -48,6 +48,7 @@ def login(request):
     :param request:
     :return:
     """
+
     def get_response(info, remark_name):
         from qqai import TextChat
 
@@ -98,80 +99,147 @@ def get_group(request):
     demo:  /send_msg/get_group?group_name=测试1
     """
 
-    full_path = request.get_full_path()
     group_name = request.GET.get("group_name", "")
-    groups = itchat.search_chatrooms(name=group_name)
-    data = {}
+    result = []
 
-    if groups:
-        group = groups[0]
-        data['UserName'] = group.get("UserName")
-        data['NickName'] = group.get("NickName")
-        data['MemberCount'] = group.get("MemberCount")
-        data['MemberList'] = group.get("MemberList")
+    if group_name:
+        groups = itchat.search_chatrooms(name=group_name)
+        print('--------------------------')
+        print(groups)
+        print('--------------------------')
+        if groups:
+            data = {}
+            group = groups[0]
+            data['UserName'] = group.get("UserName")
+            data['NickName'] = group.get("NickName")
+            data['MemberCount'] = group.get("MemberCount")
+            data['MemberList'] = group.get("MemberList")
+            result.append(data)
+    else:
+        groups = itchat.get_chatrooms(update=True)[1:]
+        for each in groups:
+            data = {}
+            data['UserName'] = each.get("UserName")
+            data['NickName'] = each.get("NickName")
+            data['MemberCount'] = each.get("MemberCount")
+            data['MemberList'] = each.get("MemberList")
+            result.append(data)
 
-    # logg(full_path, request.GET, {})
-    return Response({"status": 1, "results": data})
+    return Response({"status": 1, "results": result})
 
 
 # 创建群组
 @api_view(["POST"])
 def create_group(request):
     """
-    先调用iechat查询接口，找出ID，插入数据库
+    创建群组
     :param request: group_name,operator
     demo: {
             "group_name":"测试",
-            "operator": "admin"
+            "user_names": ["自己1", "自己2"],  # 创建群组要加入的成员（好友备注名）
+            "first_msg": "新建的群组发送的第一条消息"  # 默认： hello everyone
             }
     """
 
-    full_path = request.get_full_path()
-    path = request.path
     data = request.data
-    group_name = data.get("group_name")
-    operator = data.get("operator")
-    group_filter = WXGROUP.objects.filter(group_name=group_name)
-    if group_filter:
-        return Response({"status": 0, "msg": "你要创建的群组已存在"})
+    group_name = data.get("group_name", None)
+    user_names = data.get("user_names", None)
+    first_msg = data.get("first_msg", settings.CREATE_GROUP_SEND_FIRST_MSG)
+    if not isinstance(user_names, list):
+        return Response({"status": 0, "msg": "user_names是列表形式！"})
+    if len(user_names) < 2:
+        return Response({"status": 0, "msg": "群组首次创建必须添加两个及以上成员！"})
+    status = 1
+    msg = "创建成功"
+    member_list = []
+    for name in user_names:
+        member_list += itchat.search_friends(name=name)
+    print(member_list)
+    r = itchat.create_chatroom(member_list, group_name)
+
+    print('------新建群组-------')
+    print(r)
+    print('-------------')
+    try:
+        if r.get("BaseResponse").get("Ret") != 0:
+            status = 0
+            msg = "创建失败"
+        else:
+            chat_root_name = r.get("ChatRoomName")
+            itchat.send(first_msg, toUserName=chat_root_name)
+    except:
+        print(traceback.format_exc())
+    data_fin = {"status": status, "msg": msg}
+    return Response(data_fin)
+
+
+# 向群组添加成员
+@api_view(["POST"])
+def add_user_to_group(request):
+    """
+
+    :param request:
+    {
+        "group_name": "测试群组2",
+        "user_names": ["自己"],
+    }
+    :return:
+    """
 
     status = 1
-    groups = itchat.search_chatrooms(name=group_name)
-    if groups:
-        # group_id = groups[0]['UserName']
-        list11 = []
-        for each in groups:
-            if group_name == each['NickName']:
-                list11.append(group_name)
-        if group_name in list11:
-            WXGROUP.objects.create(operator=operator, group_name=group_name, operate_date=now_time)
-            msg = "创建成功"
-        else:
-            msg = "创建失败，没有找到你所要创建的群组"
+    msg = "添加成功"
+    data = request.data
+    group_name = data.get("group_name", None)  # 群组名称
+    user_names = data.get("user_names", None)  # 要加入的好友, 列表形式，备注名称
+    if not isinstance(user_names, list):
+        return Response({"status": 0, "msg": "user_names是列表形式！"})
+    if not user_names or not group_name:
+        return Response({"status": 0, "msg": "user_names 和 group_name 不能为空"})
+    chat_rooms = itchat.search_chatrooms(name=group_name)
+    try:
+        if not chat_rooms:
             status = 0
-    else:
-        msg = "创建失败，没有找到你所要创建的群组"
-        status = 0
-    data_fin = {"status": status, "msg": msg}
-    # logg(full_path, data, data_fin)
-    return Response(data_fin)
+            msg = "没有查到群组"
+            raise Exception(msg)
+        group_id = ""
+        for it in chat_rooms:
+            print(it['NickName'])
+            group_id = it["UserName"]
+            break
+
+        member_list = []
+        for name in user_names:
+            member_list += itchat.search_friends(name=name)
+
+        if not member_list:
+            status = 0
+            msg = "没有查到你要添加的好友"
+            raise Exception(msg)
+        # 增加用户进入群聊
+        res = itchat.add_member_into_chatroom(group_id, member_list)
+        if res.get("BaseResponse").get("Ret") != 0:
+            print(res)
+            status = 0
+            msg = "添加失败"
+    except Exception as e:
+        print(e)
+
+    return Response({"status": status, "msg": msg})
 
 
 # 给群组发消息
 @api_view(["POST"])
 def send_to_group(request):
     """
-    通过 group_name 实时查找group_id 给群组发消息
     :param request: group_name，content
     demo: {
-            "group_name":"测试1",
+            "group_name":"测试1",  # 模糊搜索， 仅支持保存到通讯录或者在调用该接口时群里有发送过消息的
             "content":"同名群组测试"
             }
     备注：该群组你需要先保存到通讯录才可以发送！
 
     """
 
-    full_path = request.get_full_path()
     data = request.data
     group_name = data.get("group_name")
     content = data.get("content")  # + str(now_time)
@@ -210,7 +278,6 @@ def send_to_group(request):
         msg = "没有找到群组，请核对群组名是否有效！"
         status = 0
     data_fin = {"status": status, "msg": msg, }
-    # logg(full_path, data, data_fin)
     return Response(data_fin)
 
 
@@ -223,7 +290,6 @@ def get_friend(request):
     demo: /send_msg/get_friend?friend_name=舒良松
     """
 
-    full_path = request.get_full_path()
     friend_name = request.GET.get("friend_name", "")
     list_fin = []
 
@@ -403,9 +469,10 @@ def auto_del_chat(request):
     return Response(data_fin)
 
 
-def insert_city(request):
+def insert_data(request):
     _list = []
-    for each in city:
-        _list.append(CITY(**each))
-    CITY.objects.bulk_create(_list)
+    _data = []
+    for each in _data:
+        _list.append(QhLove(**each))
+    QhLove.objects.bulk_create(_list)
     return JsonResponse({"status": 1})
