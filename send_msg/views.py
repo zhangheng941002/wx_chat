@@ -4,7 +4,7 @@ from django.conf import settings
 import itchat
 import traceback
 from django.http import StreamingHttpResponse
-
+from django.db import close_old_connections, reset_queries
 from yk_wx.setting_itchat import path_file
 from .serializers import *
 
@@ -60,30 +60,35 @@ def login(request):
 
     @itchat.msg_register(itchat.content.TEXT)
     def text_reply(msg):
-        try:
-            user = msg['User']
-            print('---- 发送人 NickName：{}，备注：{} -------- 发送消息：{}'.format(user['NickName'], user['RemarkName'],
-                                                                       msg['Text']))
-            _msg = msg['Text']
-            remark_name = user['RemarkName']
-            if "关闭回复" in _msg:
-                AutoChat.objects.filter(remark_name=remark_name, status=1).update(status=0)
-            if "开启回复" in _msg:
-                AutoChat.objects.filter(remark_name=remark_name, status=0).order_by("-id").update(status=1)
-        except Exception as e:
-            print(' !!!!!!!!!!!!! 发送错误-----', str(e))
-            remark_name = str(e)
+        for _ in range(5):
+            is_connect = True
+            try:
+                user = msg['User']
+                print('---- 发送人 NickName：{}，备注：{} -------- 发送消息：{}'.format(user['NickName'], user['RemarkName'],
+                                                                           msg['Text']))
+                _msg = msg['Text']
+                remark_name = user['RemarkName']
+                if "关闭回复" in _msg:
+                    AutoChat.objects.filter(remark_name=remark_name, status=1).update(status=0)
+                if "开启回复" in _msg:
+                    AutoChat.objects.filter(remark_name=remark_name, status=0).order_by("-id").update(status=1)
 
-        if AutoChat.objects.filter(remark_name=remark_name, status=1).exists():
-            _notice = AutoChatNotice.objects.filter(remark_name=remark_name, status=0)
-            if _notice.exists():
-                _notice.update(status=1)
-                notice_msg = "\n\n" + "回复：关闭回复，则关闭智能对话；开启回复：则启动智能对话"
-            else:
-                notice_msg = ""
-            return get_response(msg["Text"], remark_name) + notice_msg
-        # return "【自动回复】" + "\n" + "我是机器人，不会聊天，请找主人说事"
-
+                if AutoChat.objects.filter(remark_name=remark_name, status=1).exists():
+                    _notice = AutoChatNotice.objects.filter(remark_name=remark_name, status=0)
+                    if _notice.exists():
+                        _notice.update(status=1)
+                        notice_msg = "\n\n" + "回复：关闭回复，则关闭智能对话；开启回复：则启动智能对话"
+                    else:
+                        notice_msg = ""
+                    return get_response(msg["Text"], remark_name) + notice_msg
+            except Exception as e:
+                # task.produce_task(data)
+                # raise e
+                reset_queries()
+                close_old_connections()
+                is_connect = False
+            if is_connect:
+                break
     res = itchat.auto_login(hotReload=True)
     itchat.run()
     status = 1
